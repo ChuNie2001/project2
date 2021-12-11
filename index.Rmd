@@ -46,7 +46,7 @@ class_diag <- function(score, truth, positive, cutoff=.5){
 
 # Mining, Classification, Prediction
 
-## Name and EID here
+## Chu Nie cn9863
 
 ### Introduction 
 
@@ -54,10 +54,13 @@ Paragraph or two introducing your datasets and variables, why they are interesti
 
 ```{R}
 library(tidyverse)
+library(readr)
+library(dplyr)
 # read your datasets in here, e.g., with read_csv()
+data <- read.csv("marketing_campaign.csv",sep = "\t")
+#data <- read_csv("WHRData2021.csv")
 
-# if your dataset needs tidying, do so here
-
+data <- data %>% na.omit()
 # any other code here
 ```
 
@@ -65,7 +68,25 @@ library(tidyverse)
 
 ```{R}
 library(cluster)
+library(GGally)
 # clustering code here
+pam_dat<-data%>%select(Recency,NumDealsPurchases,NumWebPurchases,NumStorePurchases)%>% scale
+
+sil_width<-vector()
+for(i in 2:10){
+  pam_fit <- pam(pam_dat, k = i)
+  sil_width[i] <- pam_fit$silinfo$avg.width
+}
+ggplot()+geom_line(aes(x=1:10,y=sil_width))+scale_x_continuous(name="k",breaks=1:10)
+
+
+pam1 <- pam_dat %>% pam(k=2)
+pam1
+
+pamclust<-data %>% mutate(cluster=as.factor(pam1$clustering)) 
+pamclust
+pamclust%>% ggpairs(col = c("Recency","NumDealsPurchases","NumWebPurchases","NumStorePurchases") ,aes(color = cluster))
+
 ```
 
 Discussion of clustering here
@@ -75,6 +96,20 @@ Discussion of clustering here
 
 ```{R}
 # PCA code here
+library(ggplot2)
+d1 <- data %>% select(Recency,Kidhome,Teenhome,MntWines,MntFruits,MntMeatProducts,MntFishProducts,MntSweetProducts,MntGoldProds,NumDealsPurchases,NumWebPurchases,NumStorePurchases,NumCatalogPurchases,NumWebVisitsMonth)%>% scale
+pca_1 <- prcomp(d1,cor = T)
+summary(pca_1,loadings = T)
+
+eigval<-pca_1$sdev^2 
+varprop<-round(eigval/sum(eigval), 2)
+
+ggplot() + geom_bar(aes(y = varprop, x = (1:7)), stat = "identity") + 
+    xlab("") + geom_path(aes(y = varprop, x = 1:7)) + geom_text(aes(x = 1:7, 
+    y = varprop, label = round(varprop, 2)), vjust = 1, col = "white", 
+    size = 5) + scale_y_continuous(breaks = seq(0, 0.6, 0.2), 
+    labels = scales::percent) + scale_x_continuous(breaks = 1:10)
+
 ```
 
 Discussions of PCA here. 
