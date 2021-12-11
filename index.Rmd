@@ -154,7 +154,7 @@ table(truth= factor(data$Response==1, levels=c("TRUE","FALSE")),
 set.seed(1234)
 k=10 
 temp<-data[sample(nrow(data)),] 
-folds<-cut(seq(1:nrow(data)),breaks=k,labels=F)
+folds<-cut(seq(1:nrow(temp)),breaks=k,labels=F)
 diags<-NULL
 for(i in 1:k){
   train<-temp[folds!=i,]
@@ -193,7 +193,7 @@ table(truth= factor(data$Response==1, levels=c("TRUE","FALSE")),
 set.seed(1234)
 k=10 
 temp<-data[sample(nrow(data)),] 
-folds<-cut(seq(1:nrow(data)),breaks=k,labels=F)
+folds<-cut(seq(1:nrow(temp)),breaks=k,labels=F)
 diags<-NULL
 for(i in 1:k){
   train<-temp[folds!=i,]
@@ -214,17 +214,33 @@ Discussion
 
 ```{R}
 # regression model code here
-reg1 <- lm(Response~.,data = data)
+data1 <- data %>% select(-Dt_Customer)
+reg1 <- lm(Response~.,data = data1)
 
 reg1_sum <- summary(reg1)
 
 mse <- mean(reg1_sum$residuals^2)
 
 mse
+
 ```
 
 ```{R}
 # cross-validation of regression model here
+set.seed(1234)
+k=5 
+data1 <- data %>% select(-Dt_Customer)
+temp<-data1[sample(nrow(data1)),]
+folds<-cut(seq(1:nrow(data1)),breaks=k,labels=F) 
+diags<-NULL
+for(i in 1:k){
+  train<-temp[folds!=i,]
+  test<-temp[folds==i,]
+  fit<-lm(Response~.,data=train)
+  yhat<-predict(fit,newdata=test)
+  diags<-mean((test$Response-yhat)^2)
+}
+mean(diags)
 
 ```
 
@@ -238,6 +254,7 @@ library(reticulate)
 
 ```{python}
 # python code here
+
 ```
 
 Discussion

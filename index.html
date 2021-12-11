@@ -1714,7 +1714,7 @@ class_diag(score, data$Response, positive = 1)</code></pre>
 set.seed(1234)
 k = 10
 temp &lt;- data[sample(nrow(data)), ]
-folds &lt;- cut(seq(1:nrow(data)), breaks = k, labels = F)
+folds &lt;- cut(seq(1:nrow(temp)), breaks = k, labels = F)
 diags &lt;- NULL
 for (i in 1:k) {
     train &lt;- temp[folds != i, ]
@@ -1809,7 +1809,7 @@ knn1</code></pre>
 set.seed(1234)
 k = 10
 temp &lt;- data[sample(nrow(data)), ]
-folds &lt;- cut(seq(1:nrow(data)), breaks = k, labels = F)
+folds &lt;- cut(seq(1:nrow(temp)), breaks = k, labels = F)
 diags &lt;- NULL
 for (i in 1:k) {
     train &lt;- temp[folds != i, ]
@@ -1830,15 +1830,31 @@ summarize_all(diags, mean)</code></pre>
 <div id="regressionnumeric-prediction" class="section level3">
 <h3>Regression/Numeric Prediction</h3>
 <pre class="r"><code># regression model code here
-reg1 &lt;- lm(Response ~ ., data = data)
+data1 &lt;- data %&gt;% select(-Dt_Customer)
+reg1 &lt;- lm(Response ~ ., data = data1)
 
 reg1_sum &lt;- summary(reg1)
 
 mse &lt;- mean(reg1_sum$residuals^2)
 
 mse</code></pre>
-<pre><code>## [1] 0.0572309</code></pre>
-<pre class="r"><code># cross-validation of regression model here</code></pre>
+<pre><code>## [1] 0.08742306</code></pre>
+<pre class="r"><code># cross-validation of regression model here
+set.seed(1234)
+k = 5
+data1 &lt;- data %&gt;% select(-Dt_Customer)
+temp &lt;- data1[sample(nrow(data1)), ]
+folds &lt;- cut(seq(1:nrow(data1)), breaks = k, labels = F)
+diags &lt;- NULL
+for (i in 1:k) {
+    train &lt;- temp[folds != i, ]
+    test &lt;- temp[folds == i, ]
+    fit &lt;- lm(Response ~ ., data = train)
+    yhat &lt;- predict(fit, newdata = test)
+    diags &lt;- mean((test$Response - yhat)^2)
+}
+mean(diags)</code></pre>
+<pre><code>## [1] 0.1069457</code></pre>
 <p>Discussion</p>
 </div>
 <div id="python" class="section level3">
