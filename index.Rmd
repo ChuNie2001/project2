@@ -250,11 +250,22 @@ Discussion
 
 ```{R}
 library(reticulate)
+use_python("/usr/bin/python3", required = F)
+income <- data$Income
 ```
 
 ```{python}
 # python code here
+a = max(r.income)
+b = min(r.income)
+print(min(r.income),max(r.income))
+print(max(r.income)-min(r.income))
 
+```
+```{R}
+py$b
+py$a
+py$a - py$b
 ```
 
 Discussion

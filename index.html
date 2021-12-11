@@ -1859,8 +1859,22 @@ mean(diags)</code></pre>
 </div>
 <div id="python" class="section level3">
 <h3>Python</h3>
-<pre class="r"><code>library(reticulate)</code></pre>
-<pre class="python"><code># python code here</code></pre>
+<pre class="r"><code>library(reticulate)
+use_python(&quot;/usr/bin/python3&quot;, required = F)
+income &lt;- data$Income</code></pre>
+<pre class="python"><code># python code here
+a = max(r.income)
+b = min(r.income)
+print(min(r.income),max(r.income))</code></pre>
+<pre><code>## 1730 666666</code></pre>
+<pre class="python"><code>print(max(r.income)-min(r.income))</code></pre>
+<pre><code>## 664936</code></pre>
+<pre class="r"><code>py$b</code></pre>
+<pre><code>## [1] 1730</code></pre>
+<pre class="r"><code>py$a</code></pre>
+<pre><code>## [1] 666666</code></pre>
+<pre class="r"><code>py$a - py$b</code></pre>
+<pre><code>## [1] 664936</code></pre>
 <p>Discussion</p>
 </div>
 <div id="concluding-remarks" class="section level3">
