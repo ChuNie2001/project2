@@ -98,13 +98,11 @@ Discussion of clustering here
 # PCA code here
 library(ggplot2)
 d1 <- data %>% select(Recency,Kidhome,Teenhome,MntWines,MntFruits,MntMeatProducts,MntFishProducts,MntSweetProducts,MntGoldProds,NumDealsPurchases,NumWebPurchases,NumStorePurchases,NumCatalogPurchases,NumWebVisitsMonth)%>% scale
-pca_1 <- prcomp(d1,cor = T)
+pca_1 <- princomp(d1,cor = T)
 summary(pca_1,loadings = T)
 
-eigval<-pca_1$sdev^2 
-varprop<-round(eigval/sum(eigval), 2)
-
-
+data %>% mutate(PC1=pca_1$scores[, 1], PC2=pca_1$scores[, 2]) %>%
+  ggplot(aes(PC1, PC2)) + geom_point(aes(color = data$Recency)) + coord_fixed()
 ```
 
 Discussions of PCA here. 
@@ -113,10 +111,63 @@ Discussions of PCA here.
 
 ```{R}
 # linear classifier code here
+fit <- glm(Response ~ Income+Kidhome+Teenhome+Recency+NumDealsPurchases+NumWebPurchases+NumCatalogPurchases+NumWebVisitsMonth+Complain+Year_Birth, data=data, family="binomial")
+
+score <- predict(fit,type="response")
+#score %>% round(3)
+
+class_diag <- function(score, truth, positive, cutoff=.5, strictlygreater=T){
+  if(strictlygreater==T) pred <- factor(score>cutoff,levels=c("TRUE","FALSE"))
+  else pred <- factor(score>=cutoff,levels=c("TRUE","FALSE"))
+  truth <- factor(truth==positive, levels=c("TRUE","FALSE"))
+  tab<-table(truth, pred)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[1,1]/rowSums(tab)[1]
+  spec=tab[2,2]/rowSums(tab)[2]
+  ppv=tab[1,1]/colSums(tab)[1]
+#CALCULATE F1
+  f1=2*(sens*ppv)/(sens+ppv)
+#CALCULATE EXACT AUC
+  truth<-as.numeric(truth=="TRUE")
+  ord<-order(score, decreasing=TRUE)
+  score <- score[ord]; truth <- truth[ord]
+  TPR=cumsum(truth)/max(1,sum(truth))
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  dup<-c(score[-1]>=score[-length(score)], FALSE)
+  TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+  n <- length(TPR)
+  auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+  round(data.frame(acc,sens,spec,ppv,f1,ba=(sens+spec)/2,auc, row.names = "Metrics"),4)
+}
+
+class_diag(score,data$Response,positive = 1)
+
+table(truth= factor(data$Response==1, levels=c("TRUE","FALSE")),
+      prediction= factor(score>.5, levels=c("TRUE","FALSE")))
+
+
 ```
 
 ```{R}
 # cross-validation of linear classifier here
+set.seed(1234)
+k=10 #choose number of folds
+temp<-data[sample(nrow(data)),] #randomly order rows
+folds<-cut(seq(1:nrow(data)),breaks=k,labels=F) #create 10 folds
+diags<-NULL
+for(i in 1:k){
+  ## Create training and test sets
+  train<-temp[folds!=i,]
+  test<-temp[folds==i,]
+  truth<-test$Response
+  ## Train model on training set
+  fit<-glm(Response~Income+Kidhome+Teenhome+Recency+NumDealsPurchases+NumWebPurchases+NumCatalogPurchases+NumWebVisitsMonth+Complain+Year_Birth,data=train,family="binomial")
+  probs<-predict(fit,newdata = test,type="response")
+  ## Test model on test set (save all k results)
+  diags<-rbind(diags,class_diag(probs,truth, positive=1))
+}
+
+summarize_all(diags,mean)
 ```
 
 Discussion here
@@ -126,6 +177,7 @@ Discussion here
 ```{R}
 library(caret)
 # non-parametric classifier code here
+
 ```
 
 ```{R}
