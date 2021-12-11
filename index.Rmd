@@ -108,7 +108,7 @@ data %>% mutate(PC1=pca_1$scores[, 1], PC2=pca_1$scores[, 2]) %>%
   ggplot(aes(PC1, PC2)) + geom_point(aes(color = data$Response)) + coord_fixed()
 ```
 
-Discussions of PCA here. 
+PC1:the higher the MntWines/MntFruits/MntMeatProducts/MntFishProducts, the less likely the customer has kid home. PC2: The higher the Teenhome and MntWines the less likely the customer purchases fruit, meat and fish. PC3: Recency is the only variable affect the pc3. PC4: The Kidhome, MntFruits and MntFishProduct have negatively affect the PC4. PC5: Teenhome, MntFruits and MntFishProduct have negatively affect the PC5. It takes 5 principle components to represent 72.4%.
 
 ###  Linear Classifier
 
@@ -170,7 +170,7 @@ for(i in 1:k){
 summarize_all(diags,mean)
 ```
 
-Discussion here
+From the logistic regression, we get the AUC of 0.7627. From performing the cross-validation, we get the AUC of 0.8822. The AUC values give us a good performance of the model at distinguishing between the positive and negative classes. The AUC values also indicating that there is no overfitting in this model.
 
 ### Non-Parametric Classifier
 
@@ -209,7 +209,7 @@ for(i in 1:k){
 summarize_all(diags,mean)
 ```
 
-Discussion
+By performing KNN, we get the AUC of 0.8585. However, when doing the cross-validation, we get AUC of 0.68712. The AUC decreases. Thus, there is moderate overfitting in this model.
 
 
 ### Regression/Numeric Prediction
@@ -246,7 +246,7 @@ mean(diags)
 
 ```
 
-Discussion
+By performing the linear regression model, we get the MSE of 0.06281474, indicating the model yields a good prediction. In cross-validation, we get the MSE of 0.07616929. Thus, there is no overfitting in this model. 
 
 ### Python 
 
@@ -270,7 +270,7 @@ py$a
 py$a - py$b
 ```
 
-Discussion
+Comparing the maximum income, minimum income, and the difference between in both python and R.
 
 ### Concluding Remarks
 
