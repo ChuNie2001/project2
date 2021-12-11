@@ -170,7 +170,7 @@ for(i in 1:k){
 summarize_all(diags,mean)
 ```
 
-From the logistic regression, we get the AUC of 0.7627. From performing the cross-validation, we get the AUC of 0.8822. The AUC values give us a good performance of the model at distinguishing between the positive and negative classes. The AUC values also indicating that there is no overfitting in this model.
+From the logistic regression, we get the AUC of 0.7627. From performing the cross-validation, we get the AUC of 0.8822. The AUC values give us a good performance of the model at distinguishing between the positive and negative classes. The AUC values also indicating that there is no overfitting in this model.The model give us a good prediction on whether the customer would respond to the campaign.
 
 ### Non-Parametric Classifier
 
@@ -246,7 +246,7 @@ mean(diags)
 
 ```
 
-By performing the linear regression model, we get the MSE of 0.06281474, indicating the model yields a good prediction. In cross-validation, we get the MSE of 0.07616929. Thus, there is no overfitting in this model. 
+By performing the linear regression model, we get the MSE of 0.06281474, indicating the model yields a good prediction. In cross-validation, we get the MSE of 0.07616929. Thus, there is no overfitting in this model.The model give us a good prediction on whether the customer would respond to the campaign.
 
 ### Python 
 
