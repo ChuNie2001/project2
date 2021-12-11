@@ -1543,10 +1543,8 @@ library(readr)
 library(dplyr)
 # read your datasets in here, e.g., with read_csv()
 data &lt;- read.csv(&quot;marketing_campaign.csv&quot;, sep = &quot;\t&quot;)
-# data &lt;- read_csv(&#39;WHRData2021.csv&#39;)
 
-data &lt;- data %&gt;% na.omit()
-# any other code here</code></pre>
+data &lt;- data %&gt;% na.omit()</code></pre>
 </div>
 <div id="cluster-analysis" class="section level3">
 <h3>Cluster Analysis</h3>
@@ -1714,22 +1712,19 @@ class_diag(score, data$Response, positive = 1)</code></pre>
 ##   FALSE   39  1844</code></pre>
 <pre class="r"><code># cross-validation of linear classifier here
 set.seed(1234)
-k = 10  #choose number of folds
-temp &lt;- data[sample(nrow(data)), ]  #randomly order rows
-folds &lt;- cut(seq(1:nrow(data)), breaks = k, labels = F)  #create 10 folds
+k = 10
+temp &lt;- data[sample(nrow(data)), ]
+folds &lt;- cut(seq(1:nrow(data)), breaks = k, labels = F)
 diags &lt;- NULL
 for (i in 1:k) {
-    ## Create training and test sets
     train &lt;- temp[folds != i, ]
     test &lt;- temp[folds == i, ]
     truth &lt;- test$Response
-    ## Train model on training set
     fit &lt;- glm(Response ~ Income + Kidhome + Teenhome + Recency + 
         NumDealsPurchases + NumWebPurchases + NumCatalogPurchases + 
         NumWebVisitsMonth + Complain + Year_Birth, data = train, 
         family = &quot;binomial&quot;)
     probs &lt;- predict(fit, newdata = test, type = &quot;response&quot;)
-    ## Test model on test set (save all k results)
     diags &lt;- rbind(diags, class_diag(probs, truth, positive = 1))
 }
 
@@ -1741,13 +1736,108 @@ summarize_all(diags, mean)</code></pre>
 <div id="non-parametric-classifier" class="section level3">
 <h3>Non-Parametric Classifier</h3>
 <pre class="r"><code>library(caret)
-# non-parametric classifier code here</code></pre>
-<pre class="r"><code># cross-validation of np classifier here</code></pre>
+# non-parametric classifier code here
+knn_fit &lt;- knn3(factor(Response == 1, levels = c(&quot;TRUE&quot;, &quot;FALSE&quot;)) ~ 
+    Income + Kidhome + Teenhome + Recency + NumDealsPurchases + 
+        NumWebPurchases + NumCatalogPurchases + NumWebVisitsMonth + 
+        Complain + Year_Birth, data = data, k = 5)
+
+knn1 &lt;- predict(knn_fit, data)
+knn1</code></pre>
+<pre><code>##              TRUE     FALSE
+##    [1,] 0.2000000 0.8000000
+##    [2,] 0.2000000 0.8000000
+##    [3,] 0.6000000 0.4000000
+##    [4,] 0.2000000 0.8000000
+##    [5,] 0.0000000 1.0000000
+##    [6,] 0.0000000 1.0000000
+##    [7,] 0.0000000 1.0000000
+##    [8,] 0.0000000 1.0000000
+##    [9,] 0.2000000 0.8000000
+##   [10,] 0.0000000 1.0000000
+##   [11,] 0.0000000 1.0000000
+##   [12,] 0.2000000 0.8000000
+##   [13,] 0.0000000 1.0000000
+##   [14,] 0.2000000 0.8000000
+##   [15,] 0.6000000 0.4000000
+##   [16,] 0.0000000 1.0000000
+##   [17,] 0.2000000 0.8000000
+##   [18,] 0.2000000 0.8000000
+##   [19,] 0.0000000 1.0000000
+##   [20,] 0.4000000 0.6000000
+##   [21,] 0.0000000 1.0000000
+##   [22,] 0.0000000 1.0000000
+##   [23,] 0.0000000 1.0000000
+##   [24,] 0.0000000 1.0000000
+##   [25,] 0.0000000 1.0000000
+##   [26,] 0.6000000 0.4000000
+##   [27,] 0.2000000 0.8000000
+##   [28,] 0.4000000 0.6000000
+##   [29,] 0.0000000 1.0000000
+##   [30,] 0.0000000 1.0000000
+##   [31,] 0.0000000 1.0000000
+##   [32,] 0.2000000 0.8000000
+##   [33,] 0.0000000 1.0000000
+##   [34,] 0.0000000 1.0000000
+##   [35,] 0.2000000 0.8000000
+##   [36,] 0.0000000 1.0000000
+##   [37,] 0.0000000 1.0000000
+##   [38,] 0.4000000 0.6000000
+##   [39,] 0.0000000 1.0000000
+##   [40,] 0.0000000 1.0000000
+##   [41,] 0.0000000 1.0000000
+##   [42,] 0.4000000 0.6000000
+##   [43,] 0.0000000 1.0000000
+##   [44,] 0.4000000 0.6000000
+##   [45,] 0.0000000 1.0000000
+##   [46,] 0.0000000 1.0000000
+##   [47,] 0.0000000 1.0000000
+##   [48,] 0.4000000 0.6000000
+##   [49,] 0.0000000 1.0000000
+##   [50,] 0.4000000 0.6000000
+##  [ reached getOption(&quot;max.print&quot;) -- omitted 2166 rows ]</code></pre>
+<pre class="r"><code>class_diag(knn1[, 1], data$Response, positive = 1)</code></pre>
+<pre><code>##            acc   sens   spec    ppv    f1    ba    auc
+## Metrics 0.8745 0.2973 0.9766 0.6923 0.416 0.637 0.8731</code></pre>
+<pre class="r"><code>table(truth = factor(data$Response == 1, levels = c(&quot;TRUE&quot;, &quot;FALSE&quot;)), 
+    prediction = factor(knn1[, 1] &gt; 0.5, levels = c(&quot;TRUE&quot;, &quot;FALSE&quot;)))</code></pre>
+<pre><code>##        prediction
+## truth   TRUE FALSE
+##   TRUE    99   234
+##   FALSE   44  1839</code></pre>
+<pre class="r"><code># cross-validation of np classifier here
+set.seed(1234)
+k = 10
+temp &lt;- data[sample(nrow(data)), ]
+folds &lt;- cut(seq(1:nrow(data)), breaks = k, labels = F)
+diags &lt;- NULL
+for (i in 1:k) {
+    train &lt;- temp[folds != i, ]
+    test &lt;- temp[folds == i, ]
+    truth &lt;- test$Response
+    fit &lt;- knn3(Response ~ Income + Kidhome + Teenhome + Recency + 
+        NumDealsPurchases + NumWebPurchases + NumCatalogPurchases + 
+        NumWebVisitsMonth + Complain + Year_Birth, data = train)
+    probs &lt;- predict(fit, newdata = test)[, 2]
+    diags &lt;- rbind(diags, class_diag(probs, truth, positive = 1))
+}
+
+summarize_all(diags, mean)</code></pre>
+<pre><code>##       acc   sens    spec     ppv      f1      ba     auc
+## 1 0.83032 0.1266 0.95491 0.33785 0.18117 0.54076 0.64329</code></pre>
 <p>Discussion</p>
 </div>
 <div id="regressionnumeric-prediction" class="section level3">
 <h3>Regression/Numeric Prediction</h3>
-<pre class="r"><code># regression model code here</code></pre>
+<pre class="r"><code># regression model code here
+reg1 &lt;- lm(Response ~ ., data = data)
+
+reg1_sum &lt;- summary(reg1)
+
+mse &lt;- mean(reg1_sum$residuals^2)
+
+mse</code></pre>
+<pre><code>## [1] 0.0572309</code></pre>
 <pre class="r"><code># cross-validation of regression model here</code></pre>
 <p>Discussion</p>
 </div>
