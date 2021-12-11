@@ -50,7 +50,7 @@ class_diag <- function(score, truth, positive, cutoff=.5){
 
 ### Introduction 
 
-Paragraph or two introducing your datasets and variables, why they are interesting to you, etc. See instructions for more information
+The data set contains the data we need for a simple customer personality behavior analysis. The dataset contains 29 variables and 2216 observations in total (after dropping the NAs). After cleaning the dataset, there are 25 variables.The main variable that I use for the project is Recency,Year_Birth, Income, Res, and several variables that present the number of times that the customer made purchasements. Recency is the number of days since customer's last purchase. The Year_Birth is the customer's birth year. Income gives us the customer's yearly household income. If Res equals to 1, the customer accepted the offer in the campaign, 0 otherwise.(The binary variable) Response is the number of times that a customer respond to the offer.NumWebPurchases: Number of purchases made through the company’s website. NumCatalogPurchases: Number of purchases made using a catalogue.NumStorePurchases: Number of purchases made directly in stores.NumWebVisitsMonth: Number of visits to company’s website in the last month.
 
 ```{R}
 library(tidyverse)
@@ -61,6 +61,7 @@ data <- read.csv("marketing_campaign.csv",sep = "\t")
 
 data <- data %>% na.omit()
 
+data <- data %>% mutate(Response = Response + AcceptedCmp1+AcceptedCmp2+AcceptedCmp3+AcceptedCmp4+AcceptedCmp5) %>% mutate(Res = if_else(Response != 0, 1,0)) %>% select(-c(AcceptedCmp1,AcceptedCmp2,AcceptedCmp3,AcceptedCmp4,AcceptedCmp5))
 ```
 
 ### Cluster Analysis
@@ -103,7 +104,7 @@ pca_1 <- princomp(d1,cor = T)
 summary(pca_1,loadings = T)
 
 data %>% mutate(PC1=pca_1$scores[, 1], PC2=pca_1$scores[, 2]) %>%
-  ggplot(aes(PC1, PC2)) + geom_point(aes(color = data$Recency)) + coord_fixed()
+  ggplot(aes(PC1, PC2)) + geom_point(aes(color = data$Response)) + coord_fixed()
 ```
 
 Discussions of PCA here. 
@@ -112,7 +113,7 @@ Discussions of PCA here.
 
 ```{R}
 # linear classifier code here
-fit <- glm(Response ~ Income+Kidhome+Teenhome+Recency+NumDealsPurchases+NumWebPurchases+NumCatalogPurchases+NumWebVisitsMonth+Complain+Year_Birth, data=data, family="binomial")
+fit <- glm(Res ~ Income+Kidhome+Teenhome+Recency+NumDealsPurchases+NumWebPurchases+NumCatalogPurchases+NumWebVisitsMonth+Complain+Year_Birth, data=data, family="binomial")
 
 score <- predict(fit,type="response")
 #score %>% round(3)
@@ -141,9 +142,9 @@ class_diag <- function(score, truth, positive, cutoff=.5, strictlygreater=T){
   round(data.frame(acc,sens,spec,ppv,f1,ba=(sens+spec)/2,auc, row.names = "Metrics"),4)
 }
 
-class_diag(score,data$Response,positive = 1)
+class_diag(score,data$Res,positive = 1)
 
-table(truth= factor(data$Response==1, levels=c("TRUE","FALSE")),
+table(truth= factor(data$Res==1, levels=c("TRUE","FALSE")),
       prediction= factor(score>.5, levels=c("TRUE","FALSE")))
 
 
@@ -159,8 +160,8 @@ diags<-NULL
 for(i in 1:k){
   train<-temp[folds!=i,]
   test<-temp[folds==i,]
-  truth<-test$Response
-  fit<-glm(Response~Income+Kidhome+Teenhome+Recency+NumDealsPurchases+NumWebPurchases+NumCatalogPurchases+NumWebVisitsMonth+Complain+Year_Birth,data=train,family="binomial")
+  truth<-test$Res
+  fit<-glm(Res~Income+Kidhome+Teenhome+Recency+NumDealsPurchases+NumWebPurchases+NumCatalogPurchases+NumWebVisitsMonth+Complain+Year_Birth,data=train,family="binomial")
   probs<-predict(fit,newdata = test,type="response")
   diags<-rbind(diags,class_diag(probs,truth, positive=1))
 }
@@ -175,14 +176,14 @@ Discussion here
 ```{R}
 library(caret)
 # non-parametric classifier code here
-knn_fit <- knn3(factor(Response==1,levels=c("TRUE","FALSE")) ~ Income+Kidhome+Teenhome+Recency+NumDealsPurchases+NumWebPurchases+NumCatalogPurchases+NumWebVisitsMonth+Complain+Year_Birth, data=data, k=5)
+knn_fit <- knn3(factor(Res==1,levels=c("TRUE","FALSE")) ~ Income+Kidhome+Teenhome+Recency+NumDealsPurchases+NumWebPurchases+NumCatalogPurchases+NumWebVisitsMonth+Complain+Year_Birth, data=data, k=5)
 
 knn1 <- predict(knn_fit,data)
 knn1
 
-class_diag(knn1[,1],data$Response, positive=1)
+class_diag(knn1[,1],data$Res, positive=1)
 
-table(truth= factor(data$Response==1, levels=c("TRUE","FALSE")),
+table(truth= factor(data$Res==1, levels=c("TRUE","FALSE")),
       prediction= factor(knn1[,1]>.5, levels=c("TRUE","FALSE")))
 
 
@@ -198,8 +199,8 @@ diags<-NULL
 for(i in 1:k){
   train<-temp[folds!=i,]
   test<-temp[folds==i,]
-  truth<-test$Response
-  fit<-knn3(Response~Income+Kidhome+Teenhome+Recency+NumDealsPurchases+NumWebPurchases+NumCatalogPurchases+NumWebVisitsMonth+Complain+Year_Birth,data=train)
+  truth<-test$Res
+  fit<-knn3(Res~Income+Kidhome+Teenhome+Recency+NumDealsPurchases+NumWebPurchases+NumCatalogPurchases+NumWebVisitsMonth+Complain+Year_Birth,data=train)
   probs<-predict(fit,newdata = test)[,2]
   diags<-rbind(diags,class_diag(probs,truth, positive=1))
 }
@@ -215,7 +216,7 @@ Discussion
 ```{R}
 # regression model code here
 data1 <- data %>% select(-Dt_Customer)
-reg1 <- lm(Response~.,data = data1)
+reg1 <- lm(Res~.,data = data1)
 
 reg1_sum <- summary(reg1)
 
@@ -236,9 +237,9 @@ diags<-NULL
 for(i in 1:k){
   train<-temp[folds!=i,]
   test<-temp[folds==i,]
-  fit<-lm(Response~.,data=train)
+  fit<-lm(Res~.,data=train)
   yhat<-predict(fit,newdata=test)
-  diags<-mean((test$Response-yhat)^2)
+  diags<-mean((test$Res-yhat)^2)
 }
 mean(diags)
 
