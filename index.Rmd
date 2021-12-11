@@ -58,10 +58,9 @@ library(readr)
 library(dplyr)
 # read your datasets in here, e.g., with read_csv()
 data <- read.csv("marketing_campaign.csv",sep = "\t")
-#data <- read_csv("WHRData2021.csv")
 
 data <- data %>% na.omit()
-# any other code here
+
 ```
 
 ### Cluster Analysis
@@ -70,7 +69,8 @@ data <- data %>% na.omit()
 library(cluster)
 library(GGally)
 # clustering code here
-pam_dat<-data%>%select(Recency,NumDealsPurchases,NumWebPurchases,NumStorePurchases)%>% scale
+pam_dat<-data%>%select(Recency, NumDealsPurchases, NumWebPurchases, 
+    NumStorePurchases)%>% scale
 
 sil_width<-vector()
 for(i in 2:10){
@@ -85,7 +85,8 @@ pam1
 
 pamclust<-data %>% mutate(cluster=as.factor(pam1$clustering)) 
 pamclust
-pamclust%>% ggpairs(col = c("Recency","NumDealsPurchases","NumWebPurchases","NumStorePurchases") ,aes(color = cluster))
+pamclust%>% ggpairs(col = c("Recency", "NumDealsPurchases", 
+    "NumWebPurchases", "NumStorePurchases") ,aes(color = cluster))
 
 ```
 
@@ -151,19 +152,16 @@ table(truth= factor(data$Response==1, levels=c("TRUE","FALSE")),
 ```{R}
 # cross-validation of linear classifier here
 set.seed(1234)
-k=10 #choose number of folds
-temp<-data[sample(nrow(data)),] #randomly order rows
-folds<-cut(seq(1:nrow(data)),breaks=k,labels=F) #create 10 folds
+k=10 
+temp<-data[sample(nrow(data)),] 
+folds<-cut(seq(1:nrow(data)),breaks=k,labels=F)
 diags<-NULL
 for(i in 1:k){
-  ## Create training and test sets
   train<-temp[folds!=i,]
   test<-temp[folds==i,]
   truth<-test$Response
-  ## Train model on training set
   fit<-glm(Response~Income+Kidhome+Teenhome+Recency+NumDealsPurchases+NumWebPurchases+NumCatalogPurchases+NumWebVisitsMonth+Complain+Year_Birth,data=train,family="binomial")
   probs<-predict(fit,newdata = test,type="response")
-  ## Test model on test set (save all k results)
   diags<-rbind(diags,class_diag(probs,truth, positive=1))
 }
 
@@ -177,11 +175,36 @@ Discussion here
 ```{R}
 library(caret)
 # non-parametric classifier code here
+knn_fit <- knn3(factor(Response==1,levels=c("TRUE","FALSE")) ~ Income+Kidhome+Teenhome+Recency+NumDealsPurchases+NumWebPurchases+NumCatalogPurchases+NumWebVisitsMonth+Complain+Year_Birth, data=data, k=5)
+
+knn1 <- predict(knn_fit,data)
+knn1
+
+class_diag(knn1[,1],data$Response, positive=1)
+
+table(truth= factor(data$Response==1, levels=c("TRUE","FALSE")),
+      prediction= factor(knn1[,1]>.5, levels=c("TRUE","FALSE")))
+
 
 ```
 
 ```{R}
 # cross-validation of np classifier here
+set.seed(1234)
+k=10 
+temp<-data[sample(nrow(data)),] 
+folds<-cut(seq(1:nrow(data)),breaks=k,labels=F)
+diags<-NULL
+for(i in 1:k){
+  train<-temp[folds!=i,]
+  test<-temp[folds==i,]
+  truth<-test$Response
+  fit<-knn3(Response~Income+Kidhome+Teenhome+Recency+NumDealsPurchases+NumWebPurchases+NumCatalogPurchases+NumWebVisitsMonth+Complain+Year_Birth,data=train)
+  probs<-predict(fit,newdata = test)[,2]
+  diags<-rbind(diags,class_diag(probs,truth, positive=1))
+}
+
+summarize_all(diags,mean)
 ```
 
 Discussion
@@ -191,10 +214,18 @@ Discussion
 
 ```{R}
 # regression model code here
+reg1 <- lm(Response~.,data = data)
+
+reg1_sum <- summary(reg1)
+
+mse <- mean(reg1_sum$residuals^2)
+
+mse
 ```
 
 ```{R}
 # cross-validation of regression model here
+
 ```
 
 Discussion
