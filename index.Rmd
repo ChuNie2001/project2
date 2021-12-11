@@ -62,6 +62,8 @@ data <- read.csv("marketing_campaign.csv",sep = "\t")
 data <- data %>% na.omit()
 
 data <- data %>% mutate(Response = Response + AcceptedCmp1+AcceptedCmp2+AcceptedCmp3+AcceptedCmp4+AcceptedCmp5) %>% mutate(Res = if_else(Response != 0, 1,0)) %>% select(-c(AcceptedCmp1,AcceptedCmp2,AcceptedCmp3,AcceptedCmp4,AcceptedCmp5))
+
+head(data)
 ```
 
 ### Cluster Analysis
@@ -91,8 +93,7 @@ pamclust%>% ggpairs(col = c("Recency", "NumDealsPurchases",
 
 ```
 
-Discussion of clustering here
-    
+The sil_width has the highest value when k = 2.However the highest sil_width value only has less than 0.3, indicating the fact that the structure could be weak and artificial.The NumWebPurchases and NumStorePurchases have the highest correlation. The NumDealsPurchases and the Recency has the lowest correlation.
     
 ### Dimensionality Reduction with PCA
 
